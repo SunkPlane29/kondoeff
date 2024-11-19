@@ -1,4 +1,4 @@
-using CSV, DataFrames, CairoMakie, NonlinearSolve, QuadGK, ForwardDiff
+using CairoMakie, NonlinearSolve, QuadGK, ForwardDiff
 
 Λ = 0.65
 Nf = 2
@@ -19,7 +19,12 @@ function Ω(Δ, μ, λ)
     I1 = quadgk(k -> k^2*df0dλ(Δ, μ, λ, k), 0, Λ)[1]
     I2 = quadgk(k -> k^2*f0(Δ, μ, λ, k), 0, Λ)[1]
 
-    -λ*Nc/π^2 * I1 + Nc/π^2 * I2 + 8Nf/G * Δ^2
+    s = 1
+    if (λ < 0)
+        s = -1
+    end
+
+    -λ*s*Nc/π^2 * I1 + Nc/π^2 * I2 + 8Nf/G * Δ^2
 end
 
 gap(Δ, μ, λ) = ForwardDiff.derivative(Δi -> Ω(Δi, μ, λ), Δ)
@@ -48,14 +53,14 @@ function solvegap(μ, λ)
     return sols[findmin(Ωsols)[2]]
 end
 
-ngrid1 = 20
-ngrid2 = 20
+ngrid1 = 10
+ngrid2 = 10
 
 μvals = range(0.3, 0.5, length=ngrid1)
 λvals = range(-0.020, 0.020, length=ngrid2)
 Δsols = zeros(ngrid1, ngrid2)
 
-Threads.@threads for i in 1:ngrid1
+@time "run gap grid $(ngrid1) x $(ngrid2)" Threads.@threads for i in 1:ngrid1
     Threads.@threads for j in 1:ngrid2
         Δsols[i, j] = solvegap(μvals[i], λvals[j])
     end
