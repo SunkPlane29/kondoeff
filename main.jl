@@ -27,7 +27,11 @@ function Ω(Δ, μ, λ)
     -λ*s*Nc/π^2 * I1 + Nc/π^2 * I2 + 8Nf/G * Δ^2
 end
 
-gap(Δ, μ, λ) = ForwardDiff.derivative(Δi -> Ω(Δi, μ, λ), Δ)
+function gap(Δ, μ, λ)
+    I2(Δi) = quadgk(k -> k^2*f0(Δi, μ, λ, k), 0, Λ)[1]
+
+    Nc/π^2 * ForwardDiff.derivative(Δi -> I2(Δi), Δ) + 16Nf/G * Δ
+end
 
 function solvegap(μ, λ)
     xmin1 = -0.005
