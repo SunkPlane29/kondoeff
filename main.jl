@@ -20,9 +20,9 @@ function Ω(Δ, μ, λ)
     I2 = quadgk(k -> k^2*f0(Δ, μ, λ, k), 0, Λ)[1]
 
     s = 1
-    if (λ < 0)
-        s = -1
-    end
+    # if λ < 0
+    #     s = -1
+    # end
 
     -λ*s*Nc/π^2 * I1 + Nc/π^2 * I2 + 8Nf/G * Δ^2
 end
@@ -32,6 +32,8 @@ function gap(Δ, μ, λ)
 
     Nc/π^2 * ForwardDiff.derivative(Δi -> I2(Δi), Δ) + 16Nf/G * Δ
 end
+
+# gap(Δ, μ, λ) = ForwardDiff.derivative(Δi -> Ω(Δi, μ, λ), Δ)
 
 function solvegap(μ, λ)
     xmin1 = -0.005
@@ -49,7 +51,7 @@ function solvegap(μ, λ)
     sols = zeros(size(xguess))
     Threads.@threads for i in eachindex(sols)
         prob = IntervalNonlinearProblem(f, xguess[i], ())
-        sol = solve(prob)
+        sol = solve(prob, maxiters=1000, abstol=1e-8)
         sols[i] = sol.u
     end
 
@@ -57,8 +59,8 @@ function solvegap(μ, λ)
     return sols[findmin(Ωsols)[2]]
 end
 
-ngrid1 = 10
-ngrid2 = 10
+ngrid1 = 20
+ngrid2 = 20
 
 μvals = range(0.3, 0.5, length=ngrid1)
 λvals = range(-0.020, 0.020, length=ngrid2)
